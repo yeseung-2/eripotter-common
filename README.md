@@ -1,120 +1,97 @@
 # EriPotter Common
 
-EriPotter 마이크로서비스를 위한 공통 유틸리티 패키지입니다.
+Common utilities for EriPotter microservices.
 
-## 기능
+## Features
 
-- 환경변수 기반 설정 관리
-- 비동기 데이터베이스 연결 및 세션 관리
-- FastAPI 확장 기능 (CORS, 헬스 체크 등)
-- 보안 유틸리티 (비밀번호 해시화)
-- 구조화된 로깅
+- Database management with SQLAlchemy
+  - Railway PostgreSQL support
+  - Sync/Async database support
+  - Session management
+  - Connection pooling
+- Security utilities
+  - Password hashing with bcrypt
+  - JWT token management
+- Environment variables and API keys
+  - Centralized configuration
+  - API key management
 
-## 설치
+## Installation
 
 ```bash
 pip install eripotter-common
 ```
 
-## 마이그레이션 가이드
+## Usage
 
-기존 `common/` 폴더에서 PyPI 패키지로 마이그레이션하는 방법:
-
-1. 기존 `common/` 폴더 제거
-```bash
-rm -rf common/  # Linux/Mac
-rd /s /q common  # Windows
-```
-
-2. PyPI 패키지 설치
-```bash
-pip install eripotter-common
-```
-
-3. import 문 수정
-```python
-# 이전
-from common.config import settings
-from common.db import get_db_engine
-from common.security import hash_password
-
-# 이후
-from app import settings, db, hash_password
-
-# 데이터베이스 사용
-engine = await db.initialize()
-async with db.session() as session:
-    # 데이터베이스 작업
-    pass
-```
-
-## 사용 예시
-
-### FastAPI 애플리케이션 생성
+### Database
 
 ```python
-from app import create_app, settings, setup_logging, get_session, db, Base
+from eripotter_common.database import get_db_engine, get_session
+from eripotter_common.www import DATABASE_URL
 
-# 로깅 설정
-setup_logging()
+# Use default engine (configured in www.env)
+with get_session() as session:
+    result = session.query(YourModel).all()
 
-# FastAPI 앱 생성
-app = create_app(
-    title="My Service",
-    description="My Microservice"
+# Or create custom engine
+engine = get_db_engine("your-database-url")
+
+# Async support
+from eripotter_common.database import get_async_db_engine, get_async_session
+
+async with get_async_session() as session:
+    result = await session.query(YourModel).all()
+```
+
+### Security
+
+```python
+from eripotter_common.security import hash_password, verify_password
+
+# Hash password
+hashed = hash_password("mypassword")
+
+# Verify password
+is_valid = verify_password("mypassword", hashed)
+
+# JWT tokens
+from eripotter_common.security import create_access_token
+
+token = create_access_token(
+    data={"sub": "user@example.com"},
+    secret_key="your-secret-key"
+)
+```
+
+### Environment Variables & API Keys
+
+```python
+from eripotter_common.www import (
+    OPENAI_API_KEY,
+    DATABASE_URL,
+    ASYNC_DATABASE_URL,
 )
 
-# 모델 정의
-class User(Base):
-    __tablename__ = "users"
-    # ... 모델 정의
+# Use API keys
+openai.api_key = OPENAI_API_KEY
 
-# 라우터
-@app.get("/users")
-async def get_users(session = Depends(get_session)):
-    users = await session.query(User).all()
-    return users
+# Use database URLs
+engine = get_db_engine(DATABASE_URL)
 ```
 
-### 환경변수 설정 (.env)
+## Development
 
-```env
-# 필수 설정
-DATABASE_URL=postgresql+asyncpg://user:pass@localhost/db
-SERVICE_NAME=my-service
+1. Clone the repository
+2. Install development dependencies:
+   ```bash
+   pip install -e ".[test]"
+   ```
+3. Run tests:
+   ```bash
+   pytest
+   ```
 
-# 선택적 설정
-SQL_ECHO=true
-LOG_LEVEL=INFO
-JSON_LOGS=true
-PORT=8000
-```
+## License
 
-## 개발 환경 설정
-
-1. 저장소 클론
-```bash
-git clone https://github.com/eripotter/eripotter-common.git
-cd eripotter-common
-```
-
-2. 가상환경 생성 및 활성화
-```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-```
-
-3. 개발 의존성 설치
-```bash
-pip install -e ".[test]"
-```
-
-4. 테스트 실행
-```bash
-pytest
-```
-
-## 라이선스
-
-MIT License - 자세한 내용은 [LICENSE](LICENSE) 파일을 참조하세요.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

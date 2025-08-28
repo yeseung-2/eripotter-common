@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "eripotter-common"
-version = "0.1.0"
+version = "0.1.4"
 description = "Common utilities for EriPotter microservices"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -29,6 +29,8 @@ dependencies = [
     "pydantic>=2.0.0",
     "fastapi>=0.100.0",
     "httpx>=0.24.0",
+    "asyncpg>=0.28.0",  # async database support
+    "PyJWT>=2.8.0",     # JWT token support
 ]
 
 [project.optional-dependencies]
@@ -43,16 +45,16 @@ Homepage = "https://eripotter.com"
 Repository = "https://github.com/eripotter/eripotter-common"
 
 [tool.hatch.build.targets.wheel]
-packages = ["app"]
+packages = ["eripotter_common"]
 
 [tool.pytest.ini_options]
-addopts = "-v --cov=app --cov-report=term-missing"
+addopts = "-v --cov=eripotter_common --cov-report=term-missing"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 filterwarnings = ["ignore::DeprecationWarning"]
 
 [tool.coverage.run]
-source = ["app"]
+source = ["eripotter_common"]
 
 [tool.black]
 line-length = 100
